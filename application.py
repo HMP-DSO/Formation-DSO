@@ -166,3 +166,8 @@ def view_file():
         return render_template('filecontent.html', filename=filename, content=content)
     except Exception as e:
         abort(500, description=str(e))
+
+
+#Vérification de sécurité pour empêcher la sortie du répertoire
+if not requested_path.startswith(base_path) or not os.path.isfile(requested_path):
+   abort(403)
