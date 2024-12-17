@@ -1,6 +1,6 @@
-# pyyaml==5.3 required. Vulnerability has been fixed in 5.3.1   
+# pyyaml==5.3 required. Vulnerability has been fixed in 5.3.1
 # pip install PyYAML==5.3 / Correction pip install PyYAML==5.4
-# CVE-2020-1747 
+# CVE-2020-1747
 
 import yaml
 import subprocess
@@ -24,11 +24,34 @@ def index():
 @app.route('/upload')
 def upload():
     return render_template('upload.html')
-    
+
+@app.route('/view')
+def view_file():
+    filename = request.args.get('file')  # Paramètre `file` passé dans l'URL
+    base_path = os.path.abspath('./files')  # Répertoire sécurisé
+    if not requested_path.startswith(base_path) or not os.path.isfile(requested_path):
+        abort(403)
+    #Vérification de sécurité pour empêcher la sortie du répertoire
+    try:
+        with open(requested_path, 'r') as file:
+            content = file.read()  # Lire le contenu du fichier
+        return render_template('filecontent.html', filename=filename, content=content)
+    except Exception as e:
+        abort(500, description=str(e))
 
 @app.route('/error')
 def error():
     return render_template('error.html')
+
+@app.route('/files')
+def files():
+    path = f'{Path(__file__).parent}'
+    file_path = path + "\\files"
+    print(file_path)
+    fichier = []
+    for item in os.listdir(file_path):
+        fichier.append(item)
+    return render_template('files.html', files=fichier)
 
 #Crée le /upload du HTML et permet de sélectionner un fichier et de l'envoyer
 @app.route('/uploaded', methods=['GET', 'POST'])
@@ -52,7 +75,7 @@ def uploaded():
             #raise ValueError(f"{Fore.RED}[-] Invalid filename : {file.filename}{Fore.RESET}")
         else:
             file_content = process_file(file_name)
-            
+
             string_file_content = str(file_content)
             if string_file_content.__contains__('Errno'):
                 err = file_content
@@ -142,32 +165,10 @@ if __name__ == '__main__':
     gen_reqtxt(directory)
     app.run(debug=True)
 
-@app.route('/files')
-def files():
-    path = f'{Path(__file__).parent}'
-    file_path = path + "\\files"
-    print(file_path)
-    fichier = []
-    for item in os.listdir(file_path):
-        fichier.append(item)
-    return render_template('files.html', files=fichier)
 
 
-@app.route('/view')
-def view_file():
-    filename = request.args.get('file')  # Paramètre `file` passé dans l'URL
-    base_path = os.path.abspath('./files')  # Répertoire sécurisé
-    requested_path = os.path.abspath(os.path.join(base_path, filename))
 
 
-    try:
-        with open(requested_path, 'r') as file:
-            content = file.read()  # Lire le contenu du fichier
-        return render_template('filecontent.html', filename=filename, content=content)
-    except Exception as e:
-        abort(500, description=str(e))
 
 
-#Vérification de sécurité pour empêcher la sortie du répertoire
-if not requested_path.startswith(base_path) or not os.path.isfile(requested_path):
-   abort(403)
+
